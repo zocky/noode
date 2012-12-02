@@ -1,0 +1,8 @@
+apt-get install node
+apt-get install npm
+apt-get install postgresql-server-dev-X.Y
+apt-get install libpq-dev
+
+
+npm install microtime
+npm install pg

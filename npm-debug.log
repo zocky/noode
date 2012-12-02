@@ -1,0 +1,48 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   'pg.native' ]
+2 info using npm@1.1.49
+3 info using node@v0.8.7
+4 verbose read json /home/zocky/src/noode/package.json
+5 verbose read json /home/zocky/src/noode/node_modules/pg/package.json
+6 verbose read json /home/zocky/src/noode/node_modules/microtime/package.json
+7 verbose read json /home/zocky/src/noode/node_modules/socket.io/package.json
+8 verbose read json /home/zocky/src/noode/package.json
+9 verbose cache add [ 'pg.native', null ]
+10 silly cache add name=undefined spec="pg.native" args=["pg.native",null]
+11 verbose parsed url { pathname: 'pg.native', path: 'pg.native', href: 'pg.native' }
+12 silly lockFile 750342cf-pg-native pg.native
+13 verbose lock pg.native /home/zocky/.npm/750342cf-pg-native.lock
+14 silly lockFile 750342cf-pg-native pg.native
+15 verbose addNamed [ 'pg.native', '' ]
+16 verbose addNamed [ null, '' ]
+17 silly lockFile 09d007ea-pg-native pg.native@
+18 verbose lock pg.native@ /home/zocky/.npm/09d007ea-pg-native.lock
+19 silly addNameRange { name: 'pg.native', range: '', hasData: false }
+20 verbose url raw pg.native
+21 verbose url resolving [ 'https://registry.npmjs.org/', './pg.native' ]
+22 verbose url resolved https://registry.npmjs.org/pg.native
+23 info retry registry request attempt 1 at 08:21:48
+24 http GET https://registry.npmjs.org/pg.native
+25 http 404 https://registry.npmjs.org/pg.native
+26 silly registry.get cb [ 404,
+26 silly registry.get   { server: 'CouchDB/1.2.0 (Erlang OTP/R15B)',
+26 silly registry.get     date: 'Sat, 01 Dec 2012 07:21:10 GMT',
+26 silly registry.get     'content-type': 'application/json',
+26 silly registry.get     'content-length': '52',
+26 silly registry.get     'cache-control': 'must-revalidate' } ]
+27 silly lockFile 09d007ea-pg-native pg.native@
+28 error 404 'pg.native' is not in the npm registry.
+28 error 404 You should bug the author to publish it
+28 error 404
+28 error 404 Note that you can also install from a
+28 error 404 tarball, folder, or http url, or git url.
+29 error System Linux 3.2.0-4-686-pae
+30 error command "/usr/local/bin/node" "/usr/local/bin/npm" "install" "pg.native"
+31 error cwd /home/zocky/src/noode
+32 error node -v v0.8.7
+33 error npm -v 1.1.49
+34 error code E404
+35 verbose exit [ 1, true ]

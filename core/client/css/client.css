@@ -1,0 +1,315 @@
+/* 
+client.css 
+
+  
+
+CUSTOMIZERS: 
+  leave this file alone, use overrides.css and styles.css instead
+
+DEVELOPERS:
+  only use this file to import other files. 
+  
+  CORE
+  These files must only contain layout, sizing and positioning, and the
+  minimum of styling required to show the layout correctly. All sizes/other 
+  settings that can be overriden by customizers should be properly tagged 
+  and included in overrides.css.
+
+  * general.css
+    default general styling of the body element, links, headings, etc.
+  * main.css 
+    top-level layout
+  * header.css
+    layout of the header, including the search form
+  * content.css
+    layout of the content panes
+  * results.css
+    layout of the results
+    
+  These customization css.files must be included last
+*/
+
+body, body * {
+  box-sizing:border-box;
+}
+body {
+  font-family:sans-serif;
+  font-size:12px;
+}
+
+#toolbar {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:36px;
+  background:#46a;
+  color:white;
+}
+#logo {
+ position:absolute;
+ left:4px;
+ top:4px;
+ font-size:24px;
+ font-weight:bold;
+}
+
+#login {
+ position:absolute;
+ right:4px;
+ top:4px;
+}
+#main {
+  position:fixed;
+  top:36px;
+  bottom:0px;
+  left:0;
+  right:250px ;
+  background:#46a;
+}
+
+#messages {
+  display:none;
+}
+
+
+#results  .error {
+  font-weight:bold;
+  color:red;
+}
+
+.isloggedin {
+  display:none;
+}
+
+.loggedin .isloggedin {
+  display:block;
+}
+
+.loggedin .isloggedout {
+  display:none;
+}
+
+#query {
+  position:absolute;
+  bottom:4px;
+  left:4px;
+  right:4px;
+  height:200px;
+}
+
+#results {
+  display:table-cell;
+  vertical-align:bottom;
+  position:absolute;
+  bottom:208px;
+  left:4px;
+  right:4px;
+  top:0px;
+  padding:4px;
+  overflow-y:auto;
+  background:white;
+}
+
+#sql {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:170px;
+}
+
+#bottom {
+  position:absolute;
+  right:0; 
+  bottom:0;
+}
+
+#query-go {
+  width:200px;
+}
+
+.grid {
+  border-collapse:collapse;
+  xmargin:4px 0;
+  cursor:default;
+}
+.header {
+}
+.grid td {
+  border-left:solid 4px white;
+  padding:2px 6px;
+  max-width:150px;
+  height:20px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.grid .column {
+  border-left:solid 4px white;
+  padding:2px 4px;
+  background:#abf;
+}
+
+.grid tr:nth-child(2n) {
+ background:#eee;
+}
+
+.rows {
+  max-height:400px;
+  overflow-y:auto;
+}
+
+.message, .result {
+  border-top:solid 1px #46a;
+  padding-top 4px;
+}
+.message {
+ padding:4px 0;
+}
+.code {
+ font-size:14px;
+ color:#248;
+ font-family:Mono,monospace;
+}
+
+.result {
+  position:relative;
+  margin-bottom:6px;
+}
+
+.result summary {
+  padding:2px 4px;
+  background:#eee;
+  height:22px;
+}
+
+.rowcount {
+  font-size:11px;
+}
+.result-toolbar {
+  padding:2px;
+}
+.result-rightbar {
+  position:absolute;
+  right:0px;
+  top:2px;
+}
+
+.result .button {
+  margin-right: 4px;
+  vertical-align: middle;
+  padding: 0px 0px;
+  background: #46A;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-block;
+  height: 18px;
+  width: 18px;
+  text-align: center;
+  line-height: 18px;
+  margin-bottom: 0;
+}
+.result .button.remove {
+  background: #f24;
+}
+#browser {
+  position:fixed;
+  top:36px;
+  right:0;
+  bottom:0;
+  width:250px;
+  background:#46a;
+}
+
+#browser select {
+ width:100%;
+ display:block;
+}
+
+#schema-content {
+  position:absolute;
+  top:28px;
+  left:0;
+  right:0;
+  bottom:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+
+
+#browser summary {
+  color:white;
+  cursor:default;
+}
+#tables, #functions {
+ background:white;
+ width:100%;
+}
+.relation.view, .function.trigger {
+ color:#666;
+}
+.relation.selected {
+  background:#248;
+  color:#fff; 
+}
+
+.result .placeholder {
+ width:100%;
+ overflow-x:auto;
+}
+
+.column.orderdesc, .column.orderasc {
+  padding-right:12px;
+}
+
+.column.orderdesc:before {
+ content:'▴';
+ float:right;
+ margin-right:-10px;
+}
+.column.orderasc:before {
+ content:'▾';
+ float:right;
+ margin-right:-10px;
+}
+
+#browser .item {
+  white-space:nowrap;
+  cursor:pointer;
+  padding:2px 4px;
+}
+
+#browser .item:hover {
+  text-decoration:underline;
+  background:#eee;
+  position:relative;
+}
+
+#browser .item .buttons {
+  position:absolute;
+  top:0;
+  right:2px;
+  display:none;
+}
+#browser .item:hover .buttons {
+  display:block;
+}
+
+#browser .item .button {
+  display:inline-block;
+  text-transform:uppercase;
+  font-size:8px;
+  font-weight:bold;
+  background:#46a;
+  color:#ccc;
+  vertical-align:middle;
+  line-height:13px;
+  height:13px;
+  padding:0 3px;
+  border-radius:3px;
+}
+
+#browser .item .button:hover { color:white }
