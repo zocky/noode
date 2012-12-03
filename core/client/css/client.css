@@ -95,14 +95,14 @@ body {
   bottom:4px;
   left:4px;
   right:4px;
-  height:200px;
+  height:60px;
 }
 
 #results {
   display:table-cell;
   vertical-align:bottom;
   position:absolute;
-  bottom:208px;
+  bottom:68px;
   left:4px;
   right:4px;
   top:0px;
@@ -133,13 +133,14 @@ body {
   border-collapse:collapse;
   xmargin:4px 0;
   cursor:default;
+  max-width:100%;
 }
 .header {
 }
 .grid td {
   border-left:solid 4px white;
   padding:2px 6px;
-  max-width:150px;
+  max-width:450px;
   height:20px;
   white-space:nowrap;
   overflow:hidden;
@@ -155,6 +156,10 @@ body {
 .grid tr:nth-child(2n) {
  background:#eee;
 }
+.grid tr:nth-child(2n+1):last-child td {
+ border-bottom:solid 2px #ddd;
+ height:22px;
+}
 
 .rows {
   max-height:400px;
@@ -168,18 +173,21 @@ body {
 .message {
  padding:4px 0;
 }
-.code {
+.title {
  font-size:14px;
  color:#248;
  font-family:Mono,monospace;
 }
-
+.confirm .title {
+ color:red;
+}
 .result {
   position:relative;
   margin-bottom:6px;
 }
 
-.result summary {
+
+.result-header {
   padding:2px 4px;
   background:#eee;
   height:22px;
@@ -200,17 +208,17 @@ body {
 .result .button {
   margin-right: 4px;
   vertical-align: middle;
-  padding: 0px 0px;
+  padding: 0px 3px;
   background: #46A;
   color: white;
   cursor: pointer;
   border-radius: 4px;
   display: inline-block;
   height: 18px;
-  width: 18px;
   text-align: center;
   line-height: 18px;
   margin-bottom: 0;
+  min-width:18px;
 }
 .result .button.remove {
   background: #f24;
@@ -313,3 +321,38 @@ body {
 }
 
 #browser .item .button:hover { color:white }
+
+.result .spinner {
+  display:none;
+}
+
+.result.busy .spinner {
+  display:inline;
+}
+
+.button.red {
+  background:red;
+}
+
+.result .nav {
+  margin-right: 8px;
+}
+
+.result .editor {
+  width:100%;
+  background:#eee;
+  padding:6px;
+  display:none;
+}
+
+.result .code {
+  font-family:mono;
+  width:100%;
+  height:40px;
+  line-height:16px;
+  font-size:13px;
+}
+
+.result.showeditor .editor {
+  display:block;
+}

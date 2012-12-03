@@ -9,23 +9,38 @@
 		<script src="/js/client.js"></script>
 		<script src="/js/Time.js"></script>
     <link  href="/css/client.css" rel="stylesheet" type="text/css" /> 
+    
+
     <script type="text/html" id="tpl_result">
-      <details open class="result">
-        <summary>
-          <tt class="code">
+      <div class="result" data-sql="{{{esc(sql)}}}">
+        <div class="result-header">
+          <tt class="title">
             {{{sql}}}
           </tt>
           <span class="result-rightbar">
-            <span class="spinner"><img src="static/img/barspinner.gif"></span>
+            <span class="button reload">↺</span>
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
             <span class="time">{{{time}}}</span>
             <span class="button remove">×</span>
           </span>
-        </summary>
+        </div>
+        <div class="editor">
+          <textarea class="code">{{{sql}}}</textarea>
+        </div>
+    <?  if (this.page) { ?>
         <div class="result-toolbar">
           <span class="nav"> 
-            <span class="button reload">↺</span>
+            <span class="button first">◂◂</span>
             <span class="button back">◂</span>
             <span class="button next">▸</span>
+            <span class="button last">▸▸</span>
+          </span>
+          <span class="nav"> 
+            <span class="button pagesize selected" data-pagesize="10">10</span>
+            <span class="button pagesize selected" data-pagesize="20">20</span>
+            <span class="button pagesize" data-pagesize="50">50</span>
+            <span class="button pagesize" data-pagesize="100">100</span>
+            <span class="button pagesize" data-pagesize="1000">1000</span>
           </span>
           <span class="info"> 
             showing <span class="showing"></span>
@@ -33,34 +48,41 @@
             rows
           </span>
         </div>
+    <? } ?>
         <div class="placeholder">
         </div>
-      </details>
+        <div class="messages">
+        </div>
+      </div>
     </script>
 
+
     <script type="text/html" id="tpl_confirm">
-      <details open class="result">
-        <summary>
-          <tt class="code">
-            {{{sql}}}
+      <div class="result confirm" data-sql="{{{esc(sql)}}}">
+        <div class="result-header">
+          <tt class="title">
+            {{{esc(sql)}}}
           </tt>
           <span class="result-rightbar">
-            <span class="spinner"><img src="static/img/barspinner.gif"></span>
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
             <span class="time">{{{time}}}</span>
             <span class="button remove">×</span>
           </span>
-        </summary>
+        </div>
         <div class="result-toolbar">
-          <span class="nav"> 
-            <span class="button reload">↺</span>
+          <span class="confirm"> 
+            {{{message||'This will destroy data and cannot be undone.'}}}
           </span>
-          <span class="info"> 
-            {{{message|'This will destroy data and cannot be undone.'}}}
+          <span class="nav"> 
+            <span class="button confirm-yes red">Yes, go on.</span>
+            <span class="button confirm-no">Not really.</span>
           </span>
         </div>
         <div class="placeholder">
         </div>
-      </details>
+        <div class="messages">
+        </div>
+      </div>
     </script>
 
     
@@ -77,7 +99,7 @@
     <?  for (var r=0; r< rows.length; r++) { ?>
           <tr class="row">
     <?    for (var f in rows[r]) { ?>
-            <td data-column="{{{f}}}">{{{rows[r][f]}}}</td>
+            <td data-column="{{{f}}}" title="{{{esc(f+': '+rows[r][f])}}}">{{{esc(rows[r][f])}}}</td>
     <?    } ?>
           </tr>
     <?  }  ?>
@@ -86,7 +108,6 @@
 		</script>
 		
     <script type="text/html" id="tpl_norows">
-		  <div class="norows">no results found</div>
 		</script>
 		
     <script type="text/html" id="tpl_table">
@@ -94,7 +115,7 @@
 		    <span class="label">{{{label}}}</label>
 		    <div class="buttons">
 		      <span class="button browse">browse</span>
-		      <span class="button drop">drop</span>
+		      <span class="button drop red">drop</span>
 		    </div>
 		  </div>
 		</script>
@@ -104,7 +125,7 @@
 		    <span class="label">{{{label}}}</label>
 		    <div class="buttons">
 		      <span class="button def">def</span>
-		      <span class="button drop">drop</span>
+		      <span class="button drop red">drop</span>
 		    </div>
 		  </div>
 		</script>

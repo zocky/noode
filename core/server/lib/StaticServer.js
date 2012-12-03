@@ -17,10 +17,10 @@ var paths = {
 var types = {
 	html:	'text/html',
 	css:	'text/css',
-	js:		'application/javascript',
-	png:	'application/png',
-	gif:	'application/gif',
-	jpeg:	'application/jpeg',
+	js:		'text/javascript',
+	png:	'image/png',
+	gif:	'image/gif',
+	jpeg:	'image/jpeg',
 	woff:	'font/opentype',
 	ttf:	'font/ttf'
 };
