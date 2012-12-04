@@ -6,6 +6,7 @@ VERSION = 0.1
 PROGS   = bin/noode
 BIN     = $(DESTDIR)/usr/bin
 SHARE   = $(DESTDIR)/usr/share/noode
+TARBALL = $(NAME)_$(VERSION).orig.tar.gz
 
 build:
 
@@ -18,7 +19,7 @@ install: build
 
 # meta stuff
 
-package: 
+package: tarball
 	debuild -us -uc
 
 clean:
@@ -26,6 +27,6 @@ clean:
 	rm -f make.log
 
 tarball: clean
-	cd .. ; tar czvf $(NAME)_$(VERSION).orig.tar.gz --exclude=.git $(NAME) >> /dev/null
+	cd .. ; tar czvf $(TARBALL) --exclude=.git $(NAME) >> /dev/null
 
 
