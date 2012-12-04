@@ -1,11 +1,10 @@
 #!/bin/sh
 # run noode from command line
 
-NODE_PATH=".:/usr/share/noode"
-NODE="nodejs"
+NODE_PATH=${NODE_PATH=".:/usr/share/noode"}
+NODE_BIN=${NODE_BIN="nodejs"}
 
 export NODE_PATH
 
-${NODE} index.js
-
+${NODE_BIN} index.js
 
