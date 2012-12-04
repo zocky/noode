@@ -1,12 +1,10 @@
-#!/usr/local/bin/node
-// Kultura Meta Search
-// (c) 2011 User:Zocky@wiki.ljudmila.org
-// GPL 3.0 applies
+// Noode init
+// (c) 2012 ljudmila.org
 // main loader
 
-var kultura = require('./core/server').start({
+var noode = require('./core/server').start({
 /*  setting		default		*/
-//	port:		9701,
+//	port:		3000,
 //	confpath:	'etc/',
 //	confname:	'default',
 //	confext:	'.conf.js',

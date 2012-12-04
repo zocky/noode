@@ -1,6 +1,11 @@
 #!/bin/sh
 # run noode from command line
 
-nodejs index.js
+NODE_PATH=.:/usr/share/noode
+NODE=nodejs
+
+export NODE_PATH
+
+${NODE} index.js
 
 

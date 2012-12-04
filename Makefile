@@ -12,6 +12,7 @@ install: build
 	install -d $(BIN)
 	install $(PROGS) $(BIN)
 	install -d $(SHARE)
+	install index.js $(SHARE)
 
 # meta stuff
 
