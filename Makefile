@@ -18,7 +18,7 @@ install: build
 
 # meta stuff
 
-package: tarball
+package: 
 	debuild -us -uc
 
 clean:
@@ -26,6 +26,6 @@ clean:
 	rm -f make.log
 
 tarball: clean
-	cd .. ; tar czvf $(NAME)_$(VERSION).orig.tar.gz --exclude=.git $(NAME)-$(VERSION) >> /dev/null
+	cd .. ; tar czvf $(NAME)_$(VERSION).orig.tar.gz --exclude=.git $(NAME) >> /dev/null
 
 
