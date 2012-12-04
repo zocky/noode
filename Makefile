@@ -1,9 +1,11 @@
 # Edited for Debian GNU/Linux
 DESTDIR =
 
-PROGS = bin/noode
-BIN   = $(DESTDIR)/usr/bin
-SHARE = $(DESTDIR)/usr/share/noode
+NAME    = noode
+VERSION = 0.1
+PROGS   = bin/noode
+BIN     = $(DESTDIR)/usr/bin
+SHARE   = $(DESTDIR)/usr/share/noode
 
 build:
 
@@ -24,5 +26,6 @@ clean:
 	rm -f make.log
 
 tarball: clean
-	cd .. ; tar czvf noode_0.1.orig.tar.gz noode-0.1 >> make.log
+	cd .. ; tar czvf $(NAME)_$(VERSION).orig.tar.gz --exclude=.git $(NAME)-$(VERSION) >> /dev/null
+
 
