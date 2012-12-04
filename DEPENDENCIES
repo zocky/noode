@@ -6,3 +6,9 @@ apt-get install libpq-dev
 
 npm install microtime
 npm install pg
+
+
+# debian build dependencies
+apt-get install devscripts
+apt-get install equivs
+apt-get install lintian 

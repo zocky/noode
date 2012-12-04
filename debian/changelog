@@ -1,5 +1,6 @@
-noode-base (VERSION) UNRELEASED; urgency=low
+noode (0.1-1) UNRELEASED; urgency=low
 
-  * 0.1-1 Initial packaging
+  * Initial release
 
- --  <ziga@lf.ljudmila.org>  Tue, 04 Dec 2012 01:56:56 +0100
+ --  Ziga Kranjec <ziga@ljudmila.org>  Tue, 04 Dec 2012 01:56:56 +0100
+
