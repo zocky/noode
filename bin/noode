@@ -1,0 +1,6 @@
+#!/bin/sh
+# run noode from command line
+
+nodejs index.js
+
+
