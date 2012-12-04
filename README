@@ -7,6 +7,6 @@ Run "make package" to build a debian package in parent directory.
 Run "make tarball" to (re)build tarball in parent directory if downloaded from git 
 since we really don't have upstream tarball. 
 
-Tarball is needed to make debian package.
+Tarball is needed to make a debian package.
 
 You need to rebuild a tarball, if you make changes and want to build a package.
