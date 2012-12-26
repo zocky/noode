@@ -2,178 +2,406 @@
 <html> 
 	<head> 
 		<title>Noode v0.1</title> 
+		<link rel="icon" href="/static/img/favicon.png">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
 		<script src="/js/jquery.min.js"></script>
+		<script src="/js/jquery-drag.js"></script>
+		<script src="/bootstrap/js/bootstrap.js"></script>
 		<script src="http://services.ljudmila.net/static/jq/jquery.mousewheel.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
-		<script src="/js/client.js"></script>
+		<script src="/js/utils.js"></script>
+		<script src="/js/Widget.js"></script>
+		<script src="/js/Widget.parts.js"></script>
 		<script src="/js/Time.js"></script>
+		<script src="/js/Session.js"></script>
+		<script src="/js/Client.js"></script>
+		<script src="/js/Noode.js"></script>
+    <link  href="/bootstrap/css/bootstrap.css" rel="stylesheet" type="text/css" /> 
     <link  href="/css/client.css" rel="stylesheet" type="text/css" /> 
     
+<script type="text/html" id="part-tabs">
+  <div class="part-tabs full">
+    <div data-places="tab"></div>
+  </div>
+</script>
 
-    <script type="text/html" id="tpl_result">
-      <div class="result" data-sql="{{{esc(sql)}}}">
-        <div class="result-header">
-          <tt class="title">
-            {{{sql}}}
-          </tt>
-          <span class="result-rightbar">
-            <span class="button reload">↺</span>
-            <span class="spinner"><img src="static/img/spinner.gif"></span>
-            <span class="time">{{{time}}}</span>
-            <span class="button remove">×</span>
+<script type="text/html" id="part-nav_tabs">
+  <div class="part-nav_tabs full">
+    <ul class="nav nav-tabs" data-places="nav_tab">
+    </ul>
+    <div class="tab-content full with-nav" data-places="nav_tabpane">
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="part-nav_tab">
+  <li><a data-target="#{{{id}}}" data-toggle="tab"><? if (this.close) { ?><button type="button" class="close pull-left">×</button>  <? } ?>{{{label}}}</a></li>
+</script>
+<script type="text/html" id="part-nav_tabpane">
+  <div class="tab-pane" id="{{{id}}}" data-place="content"></div>
+</script>
+
+
+<script type="text/html" id="part-tab">
+  <div class="part-tab">
+    <button class="tab-tab">{{{this.label||'tab'}}}</button>
+    <div data-place="content" class="tab-content withtoolbar full-bottom"></div>
+  </div>
+</script>
+
+<script type="text/html" id="part-lsplit">
+  <div class="part part-lsplit full">
+    <div class="split-pane split-pane-left lsplit-pane-left full-left">
+      <div data-place="pane" class="full"></div>
+    </div>
+    <div class="split-splitter lsplit-splitter"></div>    
+    <div class="split-pane split-pane-right lsplit-pane-right full-right">
+      <div data-place="main" class="full"></div>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="part-rsplit">
+  <div class="part part-rsplit full">
+    <div class="split-pane split-pane-left rsplit-pane-left full-left">
+      <div data-place="main" class="full"></div>
+    </div>
+    <div class="split-splitter rsplit-splitter"></div>
+    <div class="split-pane split-pane-right rsplit-pane-right full-right">
+      <div data-place="pane" class="full"></div>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="part-console">
+  <div class="part-console full">
+    <div class="navbar navbar-static-top">
+      <div class="navbar-inner">
+        <a class="pull-left brand">{{{this.label || this.session && this.session.id ||'A Console'}}}</a>
+        <form class="navbar-form pull-right">
+          <? if (this.clear) { ?>
+            <input type="button" class="btn newquery" value="New query">
+            <input type="button" class="btn clear" value="Clear console">
+          <? } ?>
+        </form>
+      </div>
+    </div>
+    <div class="with-nav full-bottom vscroll scroller" style="padding-top:6px">
+      <div data-place="message"></div>
+      <div data-places="conlet"></div>
+      <div data-place="prompt"></div>
+    </div>
+  </div>
+</script>
+
+<script type="text/html" id="part-message">
+  <div class="alert alert-success">
+    <button class="close" data-dismiss="alert">×</button>
+    {{{this.message||'msg'}}}
+  </div>
+</script>
+<script type="text/html" id="part-error">
+  <div class="alert alert-error">
+    <strong>{{{this.message||'ERROR'}}}</strong>
+  </div>
+</script>
+
+
+<script type="text/html" id="part-conlet">
+<? var id = me.id = utils.guid(); 
+ window.console.log(this);
+?>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <div class="conlet-head bar navbar navbar-static-top">
+        <div class="navbar-inner">
+<!--          <form class="navbar-form pull-left">
+            <button class="btn reload  btn-link"><i class="icon-repeat"></i></button>
+          </form>
+          <ul class="nav pull-left">
+            <li class="divider-vertical"></li>
+          </ul>
+-->
+          <h4 class="text-info pull-left">
+            <span data-place="title" data-toggle="collapse" data-target="#{{{id}}}">
+              {{{this.title||'query'}}}
+            </span>
+          </h4>
+          <span class="navbar-form pull-right">
+            <span class="spinner"></span>
+            <output class="time">{{{this.time||''}}}</output>
+            <button class="btn btn- remove"><i class="icon-remove"></i></button>
           </span>
-        </div>
-        <div class="editor">
-          <textarea class="code">{{{sql}}}</textarea>
-        </div>
-    <?  if (this.page) { ?>
-        <div class="result-toolbar">
-          <span class="nav"> 
-            <span class="button first">◂◂</span>
-            <span class="button back">◂</span>
-            <span class="button next">▸</span>
-            <span class="button last">▸▸</span>
-          </span>
-          <span class="nav"> 
-            <span class="button pagesize selected" data-pagesize="10">10</span>
-            <span class="button pagesize selected" data-pagesize="20">20</span>
-            <span class="button pagesize" data-pagesize="50">50</span>
-            <span class="button pagesize" data-pagesize="100">100</span>
-            <span class="button pagesize" data-pagesize="1000">1000</span>
-          </span>
-          <span class="info"> 
-            showing <span class="showing"></span>
-            of <span class="rowcount"></span>
-            rows
-          </span>
-        </div>
-    <? } ?>
-        <div class="placeholder">
-        </div>
-        <div class="messages">
         </div>
       </div>
-    </script>
-
-
-    <script type="text/html" id="tpl_confirm">
-      <div class="result confirm" data-sql="{{{esc(sql)}}}">
-        <div class="result-header">
-          <tt class="title">
-            {{{esc(sql)}}}
-          </tt>
-          <span class="result-rightbar">
-            <span class="spinner"><img src="static/img/spinner.gif"></span>
-            <span class="time">{{{time}}}</span>
-            <span class="button remove">×</span>
-          </span>
-        </div>
-        <div class="result-toolbar">
-          <span class="confirm"> 
-            {{{message||'This will destroy data and cannot be undone.'}}}
-          </span>
-          <span class="nav"> 
-            <span class="button confirm-yes red">Yes, go on.</span>
-            <span class="button confirm-no">Not really.</span>
-          </span>
-        </div>
-        <div class="placeholder">
-        </div>
-        <div class="messages">
-        </div>
+    </div>
+    <div class="accordion-body collapse {{{this.collapse ? '':'in'}}}" id="{{{id}}}">
+      <div class="accordion-inner">
+        <div data-place="content"></div>
+        <div data-place="message error"></div>
       </div>
-    </script>
+    </div>
+  </div>
+</script>
 
+<script type="text/html" id="part-prompt">
+  <li class="nav-header">{{{this.title||'add query'}}}</li>
+  <div data-place="content" ></div>
+  <div data-place="message error"></div>
+</script>
+
+
+<script type="text/html" id="part-sql">
+  <div class="part part-sql">
+    <div class="editsql collapse" id="edit-{{{me.id}}}">
+      <textarea name="code" class="input-block-level  code">{{{this.code||''}}}</textarea>
+    </div>
+    <div data-place="query"></div>
+  </div>
+</script>
+
+<script type="text/html" id="part-query">
+  <div>
+    <div class="part part-pager bar navbar navbar-static-top">
+      <div class="navbar-inner">    
+        <ul class="nav pull-right">
+          <li class="btn-group">
+            <button class="btn"><i class="icon-share"></i> Export</button>
+            <button class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+              <ul class="dropdown-menu">
+                <li><a>as CSV</a></li>
+                <li><a>as JSON</a></li>
+              </ul>
+          </li>
+          <li class="btn-group">
+             <button class="btn"><i class="icon-info-sign"></i> Explain</button>
+          </li>
+        </ul>
+        <ul class="nav">
+          <li class="btn-group" data-toggle="buttons-checkbox"> 
+             <button class = "btn edit" data-toggle="collapse" data-target="#edit-{{{me.id}}}">Edit SQL</button>
+          </li>
+          <li class="btn-group"> 
+             <button class="btn btn-primary run"><i class="icon-play icon-white"></i> Query</button>
+          </li>
+          <li class="btn-group">  
+             <button class="btn btn-danger "><i class="icon-play icon-white"></i> Commit</button>
+          </li>
+        </ul>
+        <ul class="nav" data-place="pager"></ul>
+        <ul class="nav" data-place="exec"></ul>
+      </div>
+    </div>
+    <div data-place="params"></div>
+    <div data-place="confirm"></div>
+    <div data-place="queryres"></div>
+  </div>
+</script>
+
+<script type="text/html" id="part-queryres">
+  <div>
+    <div data-place="message"></div>
+    <div data-place="grid"></div>
+  </div>
+</script>
+
+<script type="text/html" id="part-prompt_sql">
+  <div class="part part-prompt">
+    <textarea name="code" class="input-block-level code"></textarea>
+  </div>
+</script>
+
+
+<script type="text/html" id="part-pager">
+    <li class="btn-group"> 
+      <button class="btn first">◂◂</button>
+      <button class="btn back">◂</button>
+      <button class="btn next">▸</button>
+      <button class="btn last">▸▸</button>
+    </li>
+    <li class="divider-vertical"></li>
+    <li class="btn-group pull-left" data-toggle="buttons-radio"> 
+      <button class = "btn limit" value="10">10</button>
+      <button class = "btn limit" value="20">20</button>
+      <button class = "btn limit" value="50">50</button>
+      <button class = "btn limit" value="100">100</button>
+      <button class = "btn limit" value="1000">1000</button>
+      <button class = "btn limit" value="all">all</button>
+    </li>
+<!--      <span class="info"> 
+        showing <output class="firstrow"> to <output class="lastrow">
+        of <output class="part rowcount">
+        rows
+      </span>
+-->      
+</script>
+
+<script type="text/html" id="part-exec">
+</script>
+
+<script type="text/html" id="part-grid">
+  <div class="part-grid hscroll" style="padding:6px 0">
+    <table class="grid table table-striped table-bordered table-condensed">
+      <thead data-place="columns"></thead>
+      <tbody data-place="rows"></tbody>
+    </table>
+  </div>
+</script>
     
-    <script type="text/html" id="tpl_grid">
-      '<table class="grid">
-        <thead>
-          <tr class="header">
-    <?  for (var f in rows[0]) { ?>
-            <th class="column" data-column="{{{f}}}">{{{f}}}</th>
-    <?  } ?>
-          </tr>
-        </thead>
-        <tbody class="rows">
-    <?  for (var r=0; r< rows.length; r++) { ?>
-          <tr class="row">
-    <?    for (var f in rows[r]) { ?>
-            <td data-column="{{{f}}}" title="{{{esc(f+': '+rows[r][f])}}}">{{{esc(rows[r][f])}}}</td>
-    <?    } ?>
-          </tr>
-    <?  }  ?>
-        </tbody>
-      </tview>
-		</script>
-		
-    <script type="text/html" id="tpl_norows">
-		</script>
-		
-    <script type="text/html" id="tpl_table">
-		  <div data-relation="{{{label}}}" class="item relation {{{ (isview?'view':'table') }}}">
-		    <span class="label">{{{label}}}</label>
-		    <div class="buttons">
-		      <span class="button browse">browse</span>
-		      <span class="button drop red">drop</span>
-		    </div>
-		  </div>
-		</script>
+<script type="text/html" id="part-columns">
+  <tr class="fields">
+<?  console.log('fields',fields); for (var i in fields) { f = fields[i]; ?>
+    <th class="field" data-column="{{{f.name}}}">{{{f.name}}}</th>
+<?  } ?>
+  </tr>
+  <tr class="filters" style="display:none">
+<?  for (var i in fields) { f = fields[i]; ?>
+    <td class="filter" data-column="{{{f.name}}}"><input type="text" ></td>
+<?  } ?>
+  </tr>
+</script>
+    
+<script type="text/html" id="part-rows">
+<?  for (var r=0; r< rows.length; r++) { ?>
+  <tr>
+<?    for (var f in rows[r]) { ?>
+    <td data-column="{{{f}}}" class="{{{rows[r][f]===null ? 'muted' :''}}}" title="{{{utils.esc(f+': '+rows[r][f])}}}">{{{utils.esc(rows[r][f])}}}</td>
+<?    } ?>
+  </tr>
+<?  }  ?>
+</script>
 
-    <script type="text/html" id="tpl_function">
-		  <div data-oid="{{{oid}}}" class="item function {{{ (istrigger?'trigger':'') }}}">
-		    <span class="label">{{{label}}}</label>
-		    <div class="buttons">
-		      <span class="button def">def</span>
-		      <span class="button drop red">drop</span>
-		    </div>
-		  </div>
-		</script>
+<script type="text/html" id="part-confirm">
+  <div class="alert alert-block alert-danger fade in">
+    <button type="button" class="close" data-dismiss="alert">×</button>
+    <p>This will destroy data and cannot be undone.</p>
+    <p></p>
+    <button class="btn btn-danger confirm-yes">Yes, I'm sure.</button> <a class="btn" data-dismiss="alert">No, not really.</a>
+  </div>
+</script>
+<!--
+<script type="text/html" id="part-browser">
+  <div id="browser">
+    <select id="schemas"><option value="">schemas...</option></select>
+    <div id="schema-content">
+      <details open>
+        <summary><b>tables</b> and views</summary>
+        <div id="tables"></div>
+      </details>
+      <details open>
+        <summary>functions</summary>
+        <div id="functions"></div>
+      </details>
+    </div>
+  </div>
+</script>
+-->
+<script type="text/html" id="part-hform">
+  <table class="table table-condensed inline-table">
+    <tr>
+<? for (var i in fields) { ?>
+      <th data-name = "{{{i}}}">{{{i}}}</th>
+<? } ?>
+    </tr>
+    <tr >
+<? for (var i in fields) { ?>
+      <td data-name = "{{{i}}}"><input type ="{{{i=='password' ? 'password' : 'text'}}}" class="{{{i=='endpoint'?'input-xxlarge':'input-small'}}}" data-name="{{{i}}}" value="{{{fields[i]}}}"></td>
+<? } ?>
+    </tr>
+  </table>
+</script>
 
+<script type="text/html" id="part-hrow">
+  <table class="table table-condensed grid">
+      <tr>
+  <?  
+      if (!(this.fields instanceof Array)) this.fields = [this.fields];
+      fields.forEach(function(f) {
+        for (var i in f) { ?>
+        <th data-name = "{{{i}}}">{{{i}}}</th>
+  <?    }
+      });
+  ?>
+      </tr>
+      <tr>
+<?  
+    fields.forEach(function(f) {
+      for (var i in f) { ?>
+        <td data-name = "{{{i}}}">{{{i=='password' ? '×××××××' : f[i] }}}</td>
+<?    
+      }
+    });
+?>
+      </tr>
+  </table>
+</script>
+
+
+<script type="text/html" id="part-login">
+  <div class="part-login">
+    <table class="table table-condensed inline-table vtop">
+      <tr><th>server</th></tr>
+      <tr><td><select class="server input-small">
+        <? for (var i in NOODE.conf.servers) { ?>
+            <option value="{{{i}}}">{{{NOODE.conf.servers[i].name||i}}}</option>
+        <? } ?>
+      </select></td></tr>
+    </table>
+    <div data-place="form" class="vtop inline-block"></div>
+    <table class="table table-condensed inline-table vtop">
+      <tr><th>&nbsp;</th></tr>
+      <tr><td><button class="login btn btn-primary">add and connect</button></td></tr>
+    </table>
+    <div data-place="message"></span>
+  </div>
+</script>
+
+
+<script type="text/html" id="part-connection">
+  <div class="part-connection">
+    <table class="table table-condensed inline-table vtop">
+      <tr><th>&nbsp;</th></tr>
+      <tr><td>
+         <button class="btn btn-primary connect unless-connected">connect</button>
+         <button class="btn btn-warning disconnect if if-connected">disconnect</button>
+      </td></tr>
+    </table>
+    <div data-place="form" class="vtop inline-block"></div>
+    <div data-place="message"></span>
+  </div>
+</script>
+
+<script type="text/html" id="part-browser">
+  <div class="part-browser full ">
+    <div data-place="schemas" class="full-top"></div>
+    <div class="full with-nav vscroll">
+      <div data-place="tables"></div>
+      <div data-place="extra"></div>
+  </div>
+</script>
+
+<script type="text/html" id="part-schemas">
+  <select data-places="schema" class="full-top"></select>
+</script>
+
+<script type="text/html" id="part-schema">
+  <option>{{{schema}}} ({{{tablecount}}})</option>
+</script>
+
+<script type="text/html" id="part-tables">
+  <ul data-places = "table" class="nav nav-list">
+    <li class="nav-header">tables and views</li>
+  </ul>
+</script>
+
+
+<script type="text/html" id="part-table">
+  <li><a data-type="{{{type}}}" class="dbtable nowrap"><i class="icon-{{{type=='view'?'filter':'list'}}}"></i>{{{name}}}</a></li>
+</script>
+
+  
 	</head>
 	<body>
-	  <div id = "toolbar">
-	    <div id = "logo">
-	      NOODE
-	    </div>
-      <div id="login">
-        <div class="isloggedout">
-          <label for="host">Host:</label> <input id="host" type="text" value="localhost">
-          <label for="port">Port:</label> <input id="port" type="text" value="5432">
-          <label for="database">Database:</label> <input id="database" type="text">
-          <label for="user">Username:</label> <input id="user" type="text">
-          <label for="password">Password:</label> <input id="password" type="password">
-          <input id="login-go" type="button" value="log in">
-        </div>
-        <div class="isloggedin">
-          You are logged in.
-          <input id="logout-go" type="button" value="log out">
-        </div>
-      </div>
-    </div>
-    <div id="browser">
-      <select id="schemas"><option value="">schemas...</option></select>
-      <div id="schema-content">
-        <details open>
-          <summary><b>tables</b> and views</summary>
-          <div id="tables"></div>
-        </details>
-        <details open>
-          <summary>functions</summary>
-          <div id="functions"></div>
-        </details>
-      </div>
-    </div>
-    <div id ="main">
-	    <div id="query">
-	      <textarea id="sql"></textarea>
-	      <div id="bottom">
-          <input type="button" id="clear" value="Clear">
-  	      <input type="button" id="query-go" value="Run SQL">
-        </div>
-	    </div>
-  	  <div id="results">
-  	  </div>
-  	</div>
+	  <div id="root" class="full padded"></div>
 	</body>
 </html>

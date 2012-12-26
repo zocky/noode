@@ -10,7 +10,6 @@ var files = {
 	"/robots.txt": "core/server/robots.txt",
 };
 var paths = {
-	"/bootstrap/":  "core/client/bootstrap/",
 	"/css/":  "core/client/css/",
 	"/js/": "core/client/js/",
 	"/static/": "local/static/"

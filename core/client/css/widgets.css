@@ -1,0 +1,198 @@
+.padded {
+  padding:4px;
+}
+.relative {
+  position:relative;
+}
+.full {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  overflow:hidden;
+}
+.left {
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+}
+.right {
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+}
+.top {
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+}
+.bottom {
+  position:absolute;
+  bottom:0;
+  right:0;
+  left:0;
+}
+
+.withtoolbar.bottom {
+  top:32px;
+}
+
+.toolbar {
+  height:32px;
+  line-height:32px;
+  padding:0 8px;
+  background:#ddd;
+  white-space:nowrap;
+}
+
+
+.split-pane {
+  position:absolute;
+}
+.split-splitter {
+  position:absolute;
+  background:silver;
+}
+
+
+.lsplit-pane-left {
+  width:200px;
+}
+.lsplit-pane-right {
+  left:208px;
+}
+.lsplit-splitter {
+  top:0;
+  bottom:0;
+  width:8px;
+  left:200px;
+  cursor:w-resize;
+}
+
+.rsplit-pane-left {
+  right:208px;
+}
+.rsplit-pane-right {
+  width:200px;
+}
+.rsplit-splitter {
+  top:0;
+  bottom:0;
+  width:8px;
+  right:200px;
+  cursor:e-resize;
+}
+.part-console > .places {
+  padding:8px;
+}
+
+.part-conlet {
+  background:white;
+  border-bottom:solid 2px #24a;
+}
+
+.conlet-head {
+  background:#8af;
+  color:#24a;
+}
+.conlet-title {
+  font-family:Mono;
+  font-weight:bold;
+}
+.bar {
+  line-height:28px;
+  padding:0 8px;
+  vertical-align:middle;
+  white-space:nowrap;
+}
+
+button {
+  position:relative;
+  top:1px;
+  background:#24a;
+  border:none;
+  border-radius:6px;
+  padding:0 6px;
+  height:20px;
+  min-width:20px;
+  font-size:12px;
+  color:#ccc;
+  font-weight:bold;
+  cursor:pointer;
+  text-shadow:0 0 2px black;
+}
+button:hover {
+  color:white;
+}
+button.red {
+  background:red;
+}
+.part-sql textarea, .part-prompt textarea {
+  width:100%;
+}
+
+.part-grid {
+  border-collapse:collapse;
+  xmargin:4px 0;
+  cursor:default;
+  max-width:100%;
+}
+
+.part-grid td,.part-grid th {
+  border-left:solid 4px white;
+  max-width:450px;
+  height:20px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.part-grid td {
+  padding:2px 6px;
+}
+.part-grid .field {
+  border-left:solid 4px white;
+  padding:2px 4px;
+  background:#abf;
+}
+
+.part-grid tr:nth-child(2n) {
+ background:#eee;
+}
+.part-grid tr:nth-child(2n+1):last-child td {
+ border-bottom:solid 2px #ddd;
+ height:22px;
+}
+
+.field {
+  width:50px;
+}
+.filter {
+  width:50px;
+}
+
+.field.sort {
+  padding-right:12px;
+}
+
+.field.sort:before {
+ content:'▴';
+ float:right;
+ margin-right:-10px;
+}
+.field.sort.reverse:before {
+ content:'▾';
+ float:right;
+ margin-right:-10px;
+}
+.filter input {
+  border:none;
+  display:inline-block;
+  width:5px;
+  height:100%;
+}
+
+

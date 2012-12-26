@@ -1,0 +1,259 @@
+<!DOCTYPE html> 
+<html> 
+	<head> 
+		<title>Noode v0.1</title> 
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
+		<script src="/js/jquery.min.js"></script>
+		<script src="http://services.ljudmila.net/static/jq/jquery.mousewheel.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/js/client.js"></script>
+		<script src="/js/Time.js"></script>
+    <link  href="/css/client.css" rel="stylesheet" type="text/css" /> 
+    
+
+    <script type="text/html" id="tpl_result">
+      <div class="result" data-sql="{{{esc(sql)}}}">
+        <div class="result-header">
+          <tt class="title">
+            {{{sql}}}
+          </tt>
+          <span class="result-rightbar">
+            <span class="button reload">↺</span>
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
+            <span class="time">{{{time}}}</span>
+            <span class="button remove">×</span>
+          </span>
+        </div>
+        <div class="editor">
+          <textarea class="code">{{{sql}}}</textarea>
+        </div>
+        <div class="result-paging">
+          <span class="nav"> 
+            <span class="button first">◂◂</span>
+            <span class="button back">◂</span>
+            <span class="button next">▸</span>
+            <span class="button last">▸▸</span>
+          </span>
+          <span class="nav"> 
+            <span class="button pagesize selected" data-pagesize="10">10</span>
+            <span class="button pagesize selected" data-pagesize="20">20</span>
+            <span class="button pagesize" data-pagesize="50">50</span>
+            <span class="button pagesize" data-pagesize="100">100</span>
+            <span class="button pagesize" data-pagesize="1000">1000</span>
+            <span class="button pagesize" data-pagesize="0" >all</span>
+          </span>
+          <span class="info"> 
+            showing <span class="showing"></span>
+            of <span class="rowcount"></span>
+            rows
+          </span>
+        </div>
+        <div class="placeholder">
+        </div>
+        <div class="messages">
+        </div>
+      </div>
+    </script>
+
+
+    <script type="text/html" id="tpl_confirm">
+      <div class="result confirm" data-sql="{{{esc(sql)}}}">
+        <div class="result-header">
+          <tt class="title">
+            {{{esc(sql)}}}
+          </tt>
+          <span class="result-rightbar">
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
+            <span class="time">{{{time}}}</span>
+            <span class="button remove">×</span>
+          </span>
+        </div>
+        <div class="result-toolbar">
+          <span class="confirm"> 
+            {{{message||'This will destroy data and cannot be undone.'}}}
+          </span>
+          <span class="nav"> 
+            <span class="button confirm-yes red">Yes, go on.</span>
+            <span class="button confirm-no">Not really.</span>
+          </span>
+        </div>
+        <div class="placeholder">
+        </div>
+        <div class="messages">
+        </div>
+      </div>
+    </script>
+
+    
+    <script type="text/html" id="tpl_grid">
+      <table class="grid">
+        <thead>
+          <tr class="header columns">
+    <?  for (var f in rows[0]) { ?>
+            <th class="column" data-column="{{{f}}}">{{{f}}}</th>
+    <?  } ?>
+          </tr>
+          <tr class="filters">
+    <?  for (var f in rows[0]) { ?>
+            <th class="filter" data-column="{{{f}}}"><input></th>
+    <?  } ?>
+          </tr>
+        </thead>
+        <tbody class="rows">
+    <?  for (var r=0; r< rows.length; r++) { ?>
+          <tr class="row">
+    <?    for (var f in rows[r]) { ?>
+            <td data-column="{{{f}}}" title="{{{esc(f+': '+rows[r][f])}}}">{{{esc(rows[r][f])}}}</td>
+    <?    } ?>
+          </tr>
+    <?  }  ?>
+        </tbody>
+      </tview>
+		</script>
+		
+    <script type="text/html" id="tpl_norows">
+		</script>
+		
+    <script type="text/html" id="tpl_table">
+		  <div data-relation="{{{label}}}" class="item relation {{{ (isview?'view':'table') }}}">
+		    <span class="label">{{{label}}}</label>
+		    <div class="buttons">
+		      <span class="button browse">browse</span>
+		      <span class="button drop red">drop</span>
+		    </div>
+		  </div>
+		</script>
+
+    <script type="text/html" id="tpl_function">
+		  <div data-oid="{{{oid}}}" class="item function {{{ (istrigger?'trigger':'') }}}">
+		    <span class="label">{{{label}}}</label>
+		    <div class="buttons">
+		      <span class="button def">def</span>
+		      <span class="button drop red">drop</span>
+		    </div>
+		  </div>
+		</script>
+
+
+<!---------------------------------------------------------------------------------------------->
+
+    <script type="text/html" id="tpl_conlet">
+      <form class="conlet {{{this.kind||'text'}}}">
+        <div class="conlet-head">
+          <tt class="conlet-title">
+            {{{this.kind}}} {{{this.sql}}}
+          </tt>
+          <span class="conlet-toolbar">
+            <span class="button reload">↺</span>
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
+            <span class="time">{{{time}}}</span>
+            <span class="button remove">×</span>
+          </span>
+        </div>
+        <div class="conlet-body">
+          {{{ template('tpl_conlet_'+(this.kind||'text'),this) }}}
+        </div>
+      </form>
+    </script>
+    
+    <script type="text/html" id="tpl_conlet_query">
+      <div class="query-editor">
+        <textarea name="code" class="code">{{{this.sql}}}</textarea>
+      </div>
+      <div class="query-settings">
+      </div>
+      <div class="query-result">
+      </div>
+      <div class="query-messages messages">
+      </div>
+    </script>
+
+    <script type="text/html" id="tpl_query_settings_exec">
+    </script>
+    
+    <script type="text/html" id="tpl_query_settings_paged">
+      <span class="nav"> 
+        <span class="button first">◂◂</span>
+        <span class="button back">◂</span>
+        <span class="button next">▸</span>
+        <span class="button last">▸▸</span>
+      </span>
+      <span class="nav"> 
+        <input type = "radio" class = "limit" name = "limit" value="10">
+        <input type = "radio" class = "limit" name = "limit" value="20" checked>
+        <input type = "radio" class = "limit" name = "limit" value="50">
+        <input type = "radio" class = "limit" name = "limit" value="100">
+        <input type = "radio" class = "limit" name = "limit" value="1000">
+        <input type = "radio" class = "limit" name = "limit" value="all">
+      </span>
+      <span class="info"> 
+        showing <output class="firstrow"> to <output class="lastrow">
+        of <output class="rowcount">
+        rows
+        <input class="private" name = "limit">
+        <input class="private" name = "offset">
+        <input class="private" name = "orderby">
+        <input class="private" name = "orderdesc">
+      </span>
+    </script>
+
+    <script type="text/html" id="tpl_query_settings_confirm">
+      <span class="confirm"> 
+        {{{message||'This will destroy data and cannot be undone.'}}}
+      </span>
+      <span class="nav"> 
+        <span class="button confirm-yes red">Yes, go on.</span>
+        <span class="button confirm-no">Not really.</span>
+      </span>
+    </script>
+
+
+
+
+	</head>
+	<body>
+	  <div id = "toolbar">
+	    <div id = "logo">
+	      NOODE
+	    </div>
+      <div id="login">
+        <div class="isloggedout">
+          <label for="host">Host:</label> <input id="host" type="text" value="localhost">
+          <label for="port">Port:</label> <input id="port" type="text" value="5432">
+          <label for="database">Database:</label> <input id="database" type="text">
+          <label for="user">Username:</label> <input id="user" type="text">
+          <label for="password">Password:</label> <input id="password" type="password">
+          <input id="login-go" type="button" value="log in">
+        </div>
+        <div class="isloggedin">
+          You are logged in.
+          <input id="logout-go" type="button" value="log out">
+        </div>
+      </div>
+    </div>
+    <div id="browser">
+      <select id="schemas"><option value="">schemas...</option></select>
+      <div id="schema-content">
+        <details open>
+          <summary><b>tables</b> and views</summary>
+          <div id="tables"></div>
+        </details>
+        <details open>
+          <summary>functions</summary>
+          <div id="functions"></div>
+        </details>
+      </div>
+    </div>
+    <div id ="main">
+  	  <div id="results">
+	      <div id="query">
+	        <textarea id="sql"></textarea>
+	        <div id="bottom">
+            <input type="button" id="clear" value="Clear">
+    	      <input type="button" id="query-go" value="Run SQL">
+          </div>
+	      </div>
+      </div>
+  	</div>
+	</body>
+</html>

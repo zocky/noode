@@ -1,0 +1,91 @@
+   <script type="text/html" id="tpl_conlet">
+      <form class="conlet {{{this.kind||'text'}}}">
+        <div class="conlet-head">
+          <tt class="conlet-title">
+            {{{this.kind}}} {{{this.sql}}}
+          </tt>
+          <span class="conlet-toolbar">
+            <span class="button reload">↺</span>
+            <span class="spinner"><img src="static/img/spinner.gif"></span>
+            <span class="time">{{{time}}}</span>
+            <span class="button remove">×</span>
+          </span>
+        </div>
+        <div class="conlet-parts">
+          
+        </div>
+        <div class="conlet-messages">
+        </div>
+      </form>
+    </script>
+    
+    <script type="text/html" id="tpl_conlet_part_sql">
+      <textarea name="code" class="code">{{{this.sql||''}}}</textarea>
+    </script>
+    
+    <script type="text/html" id="tpl_query_parts_pager">
+      <span class="nav"> 
+        <span class="button first">◂◂</span>
+        <span class="button back">◂</span>
+        <span class="button next">▸</span>
+        <span class="button last">▸▸</span>
+      </span>
+      <span class="nav"> 
+        <input type = "radio" class = "limit" name = "limit" value="10">
+        <input type = "radio" class = "limit" name = "limit" value="20" checked>
+        <input type = "radio" class = "limit" name = "limit" value="50">
+        <input type = "radio" class = "limit" name = "limit" value="100">
+        <input type = "radio" class = "limit" name = "limit" value="1000">
+        <input type = "radio" class = "limit" name = "limit" value="all">
+      </span>
+      <span class="info"> 
+        showing <output class="firstrow"> to <output class="lastrow">
+        of <output class="part rowcount">
+        rows
+      </span>
+    </script>
+
+    <script type="text/html" id="tpl_query_part_confirm">
+      <span class="confirm"> 
+        {{{message||'This will destroy data and cannot be undone. Are you sure you want to continue?'}}}
+      </span>
+      <span class="nav"> 
+        <span class="button confirm-yes red">Yes, go on.</span>
+        <span class="button confirm-no">Not really.</span>
+      </span>
+    </script>
+
+
+    <script type="text/html" id="tpl_query_part_grid">
+      <table class="grid">
+        <thead class="part columns"></thead>
+        <tbody class="part rows"></tbody>
+      </table>
+    </script>
+    
+    <script type="text/html" id="tpl_query_part_columns">
+      <thead class="part columns"></thead>
+        <tr class="fields">
+    <?  for (var f in fields) { ?>
+          <th class="field" data-column="{{{f.name}}}">{{{f.name}}}</th>
+    <?  } ?>
+        </tr>
+        <tr class="filters">
+    <?  for (var f in rows[0]) { ?>
+          <th class="filter" data-column="{{{f.name}}}"><input></th>
+    <?  } ?>
+        </tr>
+      </thead>
+    </script>
+    
+    <script type="text/html" id="tpl_query_part_columns">
+      <tbody class="part rows">
+    <?  for (var r=0; r< rows.length; r++) { ?>
+        <tr class="row">
+    <?    for (var f in rows[r]) { ?>
+          <td data-column="{{{f}}}" title="{{{esc(f+': '+rows[r][f])}}}">{{{esc(rows[r][f])}}}</td>
+    <?    } ?>
+        </tr>
+    <?  }  ?>
+      </tbody>
+  	</script>

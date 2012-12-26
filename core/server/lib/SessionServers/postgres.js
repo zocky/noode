@@ -1,205 +1,140 @@
-var time = require('microtime');
-var PG = require('pg');
+var self = module.exports = require('./base.js'), 
+    utils = self.utils,
+    PG = require('pg');
 
-function Session(client,conf) {
+
+
+var q = self.qi = function(s) {
+  return "'"+String(s).replace(/'/g,"''") + "'";
+}
+var qi = self.qi = function(s) {
+  return String(s).match(/\W/) ? '"'+String(s).replace(/"/g,'""') + '"' : String(s);
 }
 
-var serverName;
-var conf;
-exports.conf = function(conf,name) {
-  serverName = name;
-  conf = conf;
+self.makeConstring = function(conid,pass) {
+  if (!pass) return conid;
+  return conid.replace(/:\/\//,'://'+pass+':');
 }
-exports.
 
-function SessionServer(socket,opt) {
-	this.socket = socket;
-  
-	this.loggedin = false;
-	var me = this;
-	
-  var qi = function(s) {
-    return s.match(/\W/) ? '"'+(s||'').replace(/"/g,'""') + '"' : s;
-  }
-  
-	var guid = function() {
-	  return Number(String(Math.random()).substr(2)).toString(36) + Number(String(Math.random()).substr(2)).toString(36)
-	}
-	var respond = function(id,error,data) {
-    me.socket.emit('respond', {
-      id: guid(),
-      reqid: id,
-      error: error,
-      data: data
+self.makeConid = function(args) {
+  var auth = utils.merge({},self.conf.login,args.auth);
+  return 'postgres://'+auth.user+'@'+auth.host+(auth.port != self.conf.login.port ? ':'+port : '') + '/'+auth.database;
+}
+
+utils.merge(self.handlers, {
+  login: function(args,cb) {
+    var conid = args.conid;
+    var constring = self.makeConstring(conid,args.password);
+    var client = new PG.Client(constring);
+    client.connect(function(error) {
+      if (error) return cb(error);
+      return cb(null,{auth:auth,client:client, conid:self.make});
     })
-	}
-	
-	this.socket.on('login', function(msg) {
-	  console.log('login',msg);
-	  msg.host = msg.host || opt.db.host || 'localhost';
-	  msg.port = msg.port || opt.db.port || 5432;
-	  msg.database =  msg.database || opt.db.database;
-	  
-	  if (me.loggedin) return respond(msg.id,'You are already logged in.',null);
-	  if (!msg.database || !msg.user) return respond(msg.id,'Incomplete connection information.',null);
-	  
-    var constring = 'postgres://'
-    + msg.user 
-    + (msg.password ? ':' + msg.password : '')
-    + '@' + msg.host
-    + ':' + msg.port
-    + '/' + msg.database;
-    
-    me.pgClient = new PG.Client(msg);
-    
-    if (me.pgClient) {
-      me.pgClient.connect(function(error, pgClient) {
-        if (error) return respond(msg.id,error,{});
-        me.pgClient.query('select current_database() as database, current_schema as schema, current_user as user', function(error, data){
-          if(error) respond(msg.id, error, data);
-
-          me.pgClient = pgClient;
-          me.loggedin = true;
-       	  me.database = msg.database;
-	        me.user = msg.user;
-	        me.host = msg.host;
-	        me.port = msg.port;
-	        respond(msg.id,error,data.rows[0]);
-        });
-      });
-    }
-	})
-	this.socket.on('log_out', function(msg) {
-	  console.log('logging out');
-    if(!me.loggedin) return respond(msg.id,'You are not logged in.',null);
-	  respond(msg.id,null,'You are now logged out');
-	  me.pgClient = null;
-	  me.loggedin = false;
-		me.pgClient.on('drain',function() {
-		  me.pgClient.end.bind(me.pgClient);
-		});
-	})
-	function respondQuery(msg,sql,args) {
-	  respondQueryWrapped(msg,'',sql,'',args) 
-  }	
-	function respondQueryScalar(msg,sql,args) {
-	  respondQueryScalarWrapped(msg,'',sql,'',args) 
-  }	
-	
-	function respondQueryWrapped(msg,before,sql,after,args) {
-    if(!me.loggedin) return respond(msg.id,'You are not logged in.',null);
-	  me.pgClient.query(before+sql+after,args||[], function(error, data) { 
-  	  if (error) {
-  	    respond(msg.id, parseSqlError(error,before,sql,after));
-  	  } else {
-  	    respond(msg.id, null,data);
-  	  }
+  },
+  logout: function(cb) {
+    var me = this;
+	  me.client.on('drain',function() {
+	    me.client.end.bind(me.client);
+	    me.client = null;
+	    cb(null);
 	  });
-	}
+  },
+  request: {  
+    status: function(args,cb) {
+      wrapQuery(this.client,'',"current_schema as schema, current_user as user, 'schemas tables functions' as list",'',{},cb);
+    },
+    query: function(args,cb) {
+      wrapQuery(this.client,'',args.code,'',args.params,cb);
+    },
+    count: function(args,cb) {
+      wrapQuery(this.client,'select count(*) from (',args.code,') as "#sub"',args.params,cb);
+    },
+    fields: function(args,cb) {
+      wrapQuery(this.client,'select * from (',args.code,') as "#sub" where false',args.params,cb);
+    },
+    page: function(args,cb) {
+      var parts = [];
+      var params = [].concat(args.params||[]);
+      
+      var where = Object.keys(args.filters).map(function(n) {
+        params.push(args.filters[n])
+        return qi(n)+'::text ilike $'+params.length+"::text || '%'";
+      }).join(' AND ');
+      if (where) parts.push('WHERE '+ where);
 
-	function respondQueryScalarWrapped(msg,before,sql,after,args) {
-    if(!me.loggedin) return respond(msg.id,'You are not logged in.',null);
-	  me.pgClient.query(before+sql+after,args||[], function(error, data) { 
-  	  if (error) {
-  	    respond(msg.id, parseSqlError(error,before,sql,after));
-  	  } else {
-  	    if (data.rows.length == 0) return respond(msg.id,null,null);
-  	    for (var i in data.rows[0]) return respond(msg.id,null,data.rows[0][i]);
-  	  }
-	  });
-	}
-	
-	function parseSqlError(err, before, sql, after) {
-    var txt = err.severity + ': '+errorCodes[err.code].replace(/_/g,' ').toUpperCase();
-    if (err.position) txt+=' near <u>' + sql.substr(err.position-1-before.length)+'</u>...';
-    if (err.detail) txt+=' ' + err.detail;
-    if (err.where) txt+='In ' + err.where;
-    if (err.hint) txt+=' (Hint: ' + err.hint + ')';
-    return {
-      message: txt,
-      severity: err.severity,
-      position: err.position-before.length
-    }
-  }	
-	this.socket.on('sql_querypage', function(msg) {
-	  var opt = msg.opt || {};
-    opt.offset = Math.max(0,(opt.offset | 0));
-    var orderby = opt.orderby ? ' ORDER BY ' + qi(opt.orderby) + (opt.orderdesc ? ' desc' : ' asc') : '';
-    opt.limit = opt.limit | 0;
-    var limit = opt.limit ? ' LIMIT ' + opt.limit +' OFFSET ' + opt.offset : '';
-    var w = [];
-    for (var i in opt.filters) {
-      if (!opt.filters[i]) continue;
-      msg.args.push(opt.filters[i]+'%');
-      w.push(qi(i)+'::text ilike $'+msg.args.length);
-    }
-    var where = (w.length) ? ' WHERE ('+w.join (') AND (')+')' : '';
-    console.log('SELECT * FROM (', msg.sql, ') as "#grid"' + where +orderby+ limit, msg.args);
-    
-	  respondQueryWrapped(msg, 'SELECT * FROM (', msg.sql, ') AS "#grid"'+where + orderby + limit, msg.args);
-	});
-	this.socket.on('sql_querycount', function(msg) {
-	  respondQueryScalarWrapped(msg, 'SELECT count(*) AS "count" FROM (', msg.sql, ') AS "#grid"', msg.args);
-	});
-	this.socket.on('sql_queryfields', function(msg) {
-	  respondQueryScalarWrapped(msg, 'SELECT * FROM (', msg.sql, ') WHERE false AS "#grid"', msg.args);
-	});
-	this.socket.on('sql_query', function(msg) {
-	  respondQuery(msg, msg.sql, msg.args);
-	});
-	this.socket.on('list_schemas', function(msg) {
-    respondQuery(msg,
+      if (args.sort) parts.push ('ORDER BY ' + qi(args.sort) + (args.reverse ? ' desc' : ' asc'));
+
+      var limit = Math.max(0,(args.limit | 0));
+      if (limit) parts.push('LIMIT '+limit);
+
+      var offset = Math.max(0,(args.offset | 0));
+      if (offset) parts.push('OFFSET '+offset);
+      
+      console.log('SELECT * FROM (', args.code, ') AS "#sub "'+parts.join('\n'),cb);
+
+      
+      wrapQuery(this.client,'SELECT * FROM (', args.code, ') AS "#sub "'+parts.join('\n'),params,cb);
+    },
+    list_schemas: function(args,cb) {
+      wrapQuery(this.client,'',
       ' select table_schema as schema, count(*) as tablecount'
     + ' from information_schema.tables '
     + ' where table_catalog=current_database()'
     + ' group by table_schema, table_catalog'
-    + ' order by table_schema'
-    );
-	});
-	this.socket.on('list_columns', function(msg) {
-    respondQuery(msg,
-      ' select table_schema as schema, count(*) as tablecount'
-    + ' from information_schema.tables '
-    + ' where table_catalog=current_database()'
-    + ' group by table_schema, table_catalog'
-    + ' order by table_schema'
-    );
-	});
-	this.socket.on('list_tables', function(msg) {
-	  console.log(msg);
-    respondQuery(msg,
-      " select table_name as label, table_type = 'VIEW' as isview"
+    + ' order by table_schema',
+      '',[],cb
+      );
+    },
+    list_tables: function(args,cb) {
+      wrapQuery(this.client,'',
+      " select table_name as name, case table_type when 'VIEW' then 'view' else 'table' end as type"
     + ' from information_schema.tables '
     + ' where table_schema = $1 and table_catalog=current_database()'
     + ' order by table_name',
-      [msg.schema]
-    );
-	});
-	this.socket.on('list_functions', function(msg) {
-    respondQuery(msg,
-      "select oid as oid, name || ' (' || pg_get_function_identity_arguments(oid) || ')' as label, istrigger from ("
-    + " select regexp_replace(specific_name,'^([^_]+_)+','')::oid  as oid, routine_name  as name, data_type = 'trigger' as istrigger from information_schema.routines"
-    + " where routine_schema = $1 and specific_catalog=current_database()"
-    + ") as foo order by label",
-      [msg.schema]
-    );
-	});	
-	this.socket.on('get_class', function(msg) {
-	//TODO: get class def from db, convert to json
-	});
-	this.socket.on('save_class', function(msg) {
-	//TODO: convert json to array, insert into #prop#replace
-	});
-	this.socket.on('disconnect', function() {
-    if(!me.loggedin) return;
-		me.pgClient.on('drain',function() {
-		  me.pgClient.end.bind(me.pgClient);
-		});
-	});
-	this.socket.emit('welcome', {protocol:'noode',version:'0.1prealpha'});
+      '',
+      [args.schema],
+      cb
+      );
+  	},
+    list_queries: function(args,cb) {
+      wrapQuery(this.client,'',
+      " select table_name as name, case table_type when 'VIEW' then 'view' else 'table' end as type"
+    + ' from information_schema.tables '
+    + ' where table_schema = $1 and table_catalog=current_database()'
+    + ' order by table_name',
+      '',
+      [args.schema],
+      cb
+      );
+  	}
+  },
+});
+
+
+function wrapQuery(client,before,code,after,params,cb) {
+  console.log(before+code+after);
+  client.query(before+code+after,params||{},function(error,data) {
+    if (error) return cb(parseError(error,before,code,after));
+    data.row = data.rows && data.rows[0];
+    data.value = data.rows && data.rows[0] && data.fields[0] && data.rows[0][data.fields[0].name];
+    return cb(null,data);
+  })
 }
 
-module.exports = SessionServer;
+
+function parseError(err, before, code, after) {
+  var txt = err.severity + ': '+errorCodes[err.code].replace(/_/g,' ').toUpperCase();
+  if (err.position) txt+=' near <u>' + code.substr(err.position-1-before.length)+'</u>...';
+  if (err.detail) txt+=' ' + err.detail;
+  if (err.where) txt+='In ' + err.where;
+  if (err.hint) txt+=' (Hint: ' + err.hint + ')';
+  return {
+    message: txt,
+    severity: err.severity,
+    position: err.position-before.length
+  }
+}	
+
 
 var errorCodes = { "0":"successful_completion", "1000":"warning", "0100C":"dynamic_result_sets_returned", "1008":"implicit_zero_bit_padding", "1003":"null_value_eliminated_in_set_function", 
 "1007":"privilege_not_granted", "1006":"privilege_not_revoked", "1004":"string_data_right_truncation", "01P01":"deprecated_feature", "2000":"no_data", "2001":"no_additional_dynamic_result_sets_returned", 
@@ -246,3 +181,38 @@ var errorCodes = { "0":"successful_completion", "1000":"warning", "0100C":"dynam
 "HV001":"fdw_out_of_memory", "HV00P":"fdw_no_schemas", "HV00J":"fdw_option_name_not_found", "HV00K":"fdw_reply_handle", "HV00Q":"fdw_schema_not_found", "HV00R":"fdw_table_not_found", 
 "HV00L":"fdw_unable_to_create_execution", "HV00M":"fdw_unable_to_create_reply", "HV00N":"fdw_unable_to_establish_connection", "P0000":"plpgsql_error", "P0001":"raise_exception", "P0002":"no_data_found", 
 "P0003":"too_many_rows", }
+
+/*
+
+
+	this.socket.on('list_columns', function(msg) {
+    respondQuery(msg,
+      ' select table_schema as schema, count(*) as tablecount'
+    + ' from information_schema.tables '
+    + ' where table_catalog=current_database()'
+    + ' group by table_schema, table_catalog'
+    + ' order by table_schema'
+    );
+	});
+	this.socket.on('list_tables', function(msg) {
+	  console.log(msg);
+    respondQuery(msg,
+      " select table_name as label, table_type = 'VIEW' as isview"
+    + ' from information_schema.tables '
+    + ' where table_schema = $1 and table_catalog=current_database()'
+    + ' order by table_name',
+      [msg.schema]
+    );
+	});
+	this.socket.on('list_functions', function(msg) {
+    respondQuery(msg,
+      "select oid as oid, name || ' (' || pg_get_function_identity_arguments(oid) || ')' as label, istrigger from ("
+    + " select regexp_replace(specific_name,'^([^_]+_)+','')::oid  as oid, routine_name  as name, data_type = 'trigger' as istrigger from information_schema.routines"
+    + " where routine_schema = $1 and specific_catalog=current_database()"
+    + ") as foo order by label",
+      [msg.schema]
+    );
+	});	
+	
+}
+*/

@@ -1,63 +1,72 @@
-function Session(srvid) {
 
-}
 
-window.NOODE = {
-  login:function(conf,cb) {
-    cb(NOODE.session);
-  },
-  servers: {
-    pg: {
-      label:'Postgres',
-      conf: {
-        host: 'localhost',
-        port: 5432,
-        database: '',
-        user: '',
-        password: ''
-      },
-    },
-    my: {
-      label:'MySQL',
-      conf: {
-        host: 'localhost',
-        port: 3306,
-        database: '',
-        user: '',
-        password: '',
+$.fn.serializeObject = function(){
+  return this.serializeArray().reduce(function(a,b){
+    var m = b.name.match(/^(.+)\[(.*)\]$/);
+    if (m) {
+      var n = m[1];
+      var k = m[2];
+      if (!k) {
+        if (!(a[n] instanceof Array)) a[n]=[];
+        a[n].push(b.value);
+      } else if (k.match(/^\d+$/)) {
+        if (!(a[n] instanceof Array)) a[n]=[];
+        a[n][k]=b.value
+      } else {
+        if (typeof(a[n])!='object' || a[n] instanceof Array) a[n]={};
+        a[n][k]=b.value
       }
+    } else {
+      a[b.name]=b.value;
     }
-  },
-  session : {
-    request: function(cmd,args,cb) {
-      console.log(cmd);
-      console.log(args);
-      cb({data:{
-        rowCount:3,
-        fields: [
-          {name:'a'},
-          {name:'b'},
-        ],
-        rows: [
-          {a:1,b:Math.random()},
-          {a:3,b:Math.random()},
-          {a:5,b:Math.random()},
-        ]
-      }})
-    },
-  },
-  setup: function() {
-    this.tabs = new Widget('tabs',{},'body');
-    this.tab = this.tabs.widget('tab',{label:'noode'});
-    this.console = this.tab.widget('content','console',{session:NOODE});
-    
-    this.console.print('login',{
-      title:'login',
-    });
-  }
+  return a;
+  },{});
 }
 
+function esc(str) {
+  if (typeof(str)=='object') str = JSON.stringify(str);
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
+var template = (function(){
+	var cache = {};
+	var re = /({{{(.*?)}}}|<\?(.*?)\?>|(.*?)(?=({{{|<\?|$)))/g;
+	return function (str, data){
+		var id;
+		if (str.match && str.match(/^[\w/]+$/)) {
+			if (cache[str]) return data ? cache[str](data) : cache[str];
+	  		id = str;
+			str = $('script[type="text/html"]#'+str).text();
+		} else {
+			var $str = $(str);
+			str = $str.html();
+		}
+		str = str.replace(/\s+/g,' ');
+		var fn =
+			"var _ret=[];"
+		+	"with(obj) {"
+		var m;
+		re.lastIndex = 0;
+		while((m = re.exec(str)) && m[0]) {
+			if(m[2]) fn += "_ret.push(" + m[2]+"); ";
+			else if (m[3]) fn += m[3]+" ";
+			else if (m[4]) fn += "_ret.push('"+m[4].replace("'","\\'")+"'); ";
+		}
+		fn+= "};\n"
+		+	"var ret = _ret.join('');\n"
+		+	"return ret"
+		console.log(fn);
+		fn = new Function("obj",fn);
+		// Provide some basic currying to the user
+		if (id) cache[id] = fn;
+		return data ? fn.apply(data,[data]) : function(data) {
+		  fn.apply(data,[data]);
+		};
+	};
+})();
+
+// socket client;
+	
 var CLIENT = (function() {
 	var me = {
 		socket: null,
@@ -86,6 +95,53 @@ var CLIENT = (function() {
 	  }
 	  socket.emit(cmd,args);
 	}
+	
+	function query (sql,args, cb, cberr) {
+    if (typeof (args) == 'function') cberr = cb, cb = args, args = [];
+    request('sql_query',{
+        sql: sql,
+        args: args||[]
+    }, cb, cberr);
+  }
+
+	function queryPage (sql,args, opt, cb, cberr) {
+    if (typeof (args) == 'function') cberr = opt, cb = args, opt = {}, args = [];
+    else if (typeof (opt) == 'function') cberr = cb, cb = opt, opt = args;
+    request('sql_querypage',{
+        sql: sql,
+        args: args||[],
+        opt: opt||{}
+    }, cb, cberr);
+  }
+
+  function resQueryPage(res,sql,args,opt,cb) {
+    var $res = $(res);
+    $res.addClass('busy');
+    queryPage(sql,args,opt,function(data) {
+      $res.removeClass('busy');
+      cb.apply(me,[data]);
+      $res.get(0).scrollIntoView();
+    }, function(error) {
+  	  console.log(error);
+      $res.removeClass('busy');
+      showError(error.message,$res);
+      $res.get(0).scrollIntoView();
+    });
+  };
+  function resQuery(res,sql,args,cb) {
+    if (typeof (args) == 'function') cb = args, args = [];
+    var $res = $(res);
+    $res.addClass('busy');
+    query(sql,args,function(data) {
+      $res.removeClass('busy');
+      cb.apply(me,[data]);
+      $res.get(0).scrollIntoView();
+    }, function(error) {
+      $res.removeClass('busy');
+      showError(error.message,$res);
+      $res.get(0).scrollIntoView();
+    });
+  };
 	
 	var socket = io.connect(location.host);
 	socket.on('welcome', function (data) {

@@ -1,17 +1,6 @@
 var time = require('microtime');
 var PG = require('pg');
 
-function Session(client,conf) {
-}
-
-var serverName;
-var conf;
-exports.conf = function(conf,name) {
-  serverName = name;
-  conf = conf;
-}
-exports.
-
 function SessionServer(socket,opt) {
 	this.socket = socket;
   
